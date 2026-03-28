@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WealthPulse — Financial Calculators</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ink: #1a1a2e;
+      --paper: #faf9f6;
+      --gold: #c9a84c;
+      --gold-light: #f0e6c8;
+      --emerald: #2d6a4f;
+      --emerald-light: #d8f3dc;
+      --rose: #c1121f;
+      --rose-light: #fde8e8;
+      --muted: #6b7280;
+      --border: #e5e0d8;
+      --card: #ffffff;
+      --shadow: 0 4px 24px rgba(26,26,46,0.08);
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--paper);
+      color: var(--ink);
+      min-height: 100vh;
+      padding-bottom: 60px;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--ink);
+      color: white;
+      padding: 32px 24px 28px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 70% 50%, rgba(201,168,76,0.18) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    header h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(1.8rem, 5vw, 2.8rem);
+      letter-spacing: -0.5px;
+      position: relative;
+    }
+    header h1 span { color: var(--gold); }
+    header p {
+      margin-top: 6px;
+      font-size: 0.9rem;
+      color: rgba(255,255,255,0.6);
+      font-weight: 300;
+      position: relative;
+    }
+
+    /* ── Nav tabs ── */
+    nav {
+      display: flex;
+      overflow-x: auto;
+      background: var(--ink);
+      border-top: 1px solid rgba(255,255,255,0.08);
+      scrollbar-width: none;
+    }
+    nav::-webkit-scrollbar { display: none; }
+    nav button {
+      flex: 1;
+      min-width: 130px;
+      padding: 14px 16px;
+      background: none;
+      border: none;
+      color: rgba(255,255,255,0.5);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 500;
+      cursor: pointer;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      transition: color 0.2s, border-bottom 0.2s;
+      border-bottom: 2px solid transparent;
+      white-space: nowrap;
+    }
+    nav button.active {
+      color: var(--gold);
+      border-bottom-color: var(--gold);
+    }
+    nav button:hover:not(.active) { color: rgba(255,255,255,0.8); }
+
+    /* ── Main layout ── */
+    main {
+      max-width: 780px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+
+    .panel { display: none; animation: fadeUp 0.35s ease; }
+    .panel.active { display: block; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Card ── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px;
+      box-shadow: var(--shadow);
+    }
+    .card-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.5rem;
+      margin-bottom: 4px;
+    }
+    .card-desc {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 28px;
+      line-height: 1.5;
+    }
+
+    /* ── Form fields ── */
+    .field { margin-bottom: 18px; }
+    label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .input-wrap {
+      position: relative;
+    }
+    .input-prefix {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-weight: 600;
+      color: var(--muted);
+      font-size: 0.95rem;
+      pointer-events: none;
+    }
+    input[type="number"] {
+      width: 100%;
+      padding: 11px 14px 11px 30px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 1rem;
+      color: var(--ink);
+      background: var(--paper);
+      transition: border-color 0.2s, box-shadow 0.2s;
+      -moz-appearance: textfield;
+    }
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
+    input[type="number"]:focus {
+      outline: none;
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px rgba(201,168,76,0.15);
+    }
+    input.no-prefix { padding-left: 14px; }
+    .input-suffix {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.85rem;
+      color: var(--muted);
+      pointer-events: none;
+    }
+
+    /* ── Grid ── */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 480px) { .grid-2 { grid-template-columns: 1fr; } }
+
+    /* ── Fixed PPF notice ── */
+    .rate-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--gold-light);
+      color: #7a5c10;
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 5px 10px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+    }
+
+    /* ── Calculate button ── */
+    .btn {
+      width: 100%;
+      padding: 13px;
+      background: var(--ink);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 8px;
+      letter-spacing: 0.2px;
+      transition: background 0.2s, transform 0.1s;
+    }
+    .btn:hover { background: #2d2d4e; }
+    .btn:active { transform: scale(0.99); }
+
+    /* ── Result box ── */
+    .result-box {
+      margin-top: 24px;
+      border-radius: 12px;
+      padding: 24px;
+      display: none;
+    }
+    .result-box.show { display: block; animation: fadeUp 0.3s ease; }
+    .result-box.green { background: var(--emerald-light); border: 1px solid #b7e4c7; }
+    .result-box.gold  { background: var(--gold-light);    border: 1px solid #dfc98a; }
+    .result-box.rose  { background: var(--rose-light);    border: 1px solid #f5c6c6; }
+
+    .result-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      opacity: 0.7;
+      margin-bottom: 2px;
+    }
+    .result-value {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.9rem;
+      line-height: 1.1;
+    }
+    .result-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    @media (max-width: 480px) { .result-grid { grid-template-columns: 1fr; } }
+    .result-item { }
+    .divider { border: none; border-top: 1px solid rgba(0,0,0,0.08); margin: 16px 0; }
+
+    .verdict {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+    .verdict-icon { font-size: 1.2rem; flex-shrink: 0; }
+
+    .error-msg {
+      color: var(--rose);
+      font-size: 0.83rem;
+      margin-top: 8px;
+      display: none;
+    }
+
+    /* ── Breakdown bar ── */
+    .bar-wrap {
+      margin-top: 14px;
+    }
+    .bar-label-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-bottom: 5px;
+    }
+    .bar-track {
+      height: 8px;
+      border-radius: 99px;
+      background: rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+    .bar-fill {
+      height: 100%;
+      border-radius: 99px;
+      background: var(--emerald);
+      transition: width 0.6s cubic-bezier(0.34,1.56,0.64,1);
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Wealth<span>Pulse</span></h1>
+  <p>Financial calculators built for Indian investors</p>
+</header>
+
+<nav>
+  <button class="active" onclick="switchTab('sip', this)">SIP Calculator</button>
+  <button onclick="switchTab('ppf', this)">PPF Calculator</button>
+  <button onclick="switchTab('decision', this)">Loan vs Invest</button>
+</nav>
+
+<main>
+
+  <!-- ── SIP ── -->
+  <div class="panel active" id="panel-sip">
+    <div class="card">
+      <div class="card-title">SIP Calculator</div>
+      <div class="card-desc">See how your monthly investments grow with the power of compounding.</div>
+
+      <div class="field">
+        <label for="sipAmount">Monthly Investment</label>
+        <div class="input-wrap">
+          <span class="input-prefix">₹</span>
+          <input type="number" id="sipAmount" placeholder="5000" min="100">
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="field">
+          <label for="sipRate">Expected Return</label>
+          <div class="input-wrap">
+            <input type="number" class="no-prefix" id="sipRate" placeholder="12" min="1" max="50">
+            <span class="input-suffix">% p.a.</span>
+          </div>
+        </div>
+        <div class="field">
+          <label for="sipYears">Duration</label>
+          <div class="input-wrap">
+            <input type="number" class="no-prefix" id="sipYears" placeholder="10" min="1" max="50">
+            <span class="input-suffix">years</span>
+          </div>
+        </div>
+      </div>
+      <div class="error-msg" id="sipError">Please fill all fields with valid values.</div>
+      <button class="btn" onclick="calculateSIP()">Calculate Growth →</button>
+
+      <div class="result-box gold" id="sipResult">
+        <div class="result-grid">
+          <div class="result-item">
+            <div class="result-label">Maturity Value</div>
+            <div class="result-value" id="sipMaturity">—</div>
+          </div>
+          <div class="result-item">
+            <div class="result-label">Wealth Gained</div>
+            <div class="result-value" id="sipGain">—</div>
+          </div>
+        </div>
+        <hr class="divider">
+        <div class="result-item" style="margin-bottom:10px;">
+          <div class="result-label">Total Invested</div>
+          <div style="font-size:1.1rem; font-weight:600;" id="sipInvested">—</div>
+        </div>
+        <div class="bar-wrap">
+          <div class="bar-label-row">
+            <span>Invested</span><span>Returns</span>
+          </div>
+          <div class="bar-track"><div class="bar-fill" id="sipBar" style="width:0%"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PPF ── -->
+  <div class="panel" id="panel-ppf">
+    <div class="card">
+      <div class="card-title">PPF Calculator</div>
+      <div class="card-desc">Public Provident Fund — a government-backed, tax-free savings instrument.</div>
+
+      <div class="rate-badge">
+        📋 PPF rate is set by the government each quarter — update it below if it has changed.
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <label for="ppfAmount">Yearly Investment</label>
+          <div class="input-wrap">
+            <span class="input-prefix">₹</span>
+            <input type="number" id="ppfAmount" placeholder="150000" min="500" max="150000">
+          </div>
+          <div style="font-size:0.75rem; color:var(--muted); margin-top:4px;">Max allowed: ₹1,50,000 per year</div>
+        </div>
+        <div class="field">
+          <label for="ppfRate">Current PPF Rate</label>
+          <div class="input-wrap">
+            <input type="number" class="no-prefix" id="ppfRate" value="7.1" min="1" max="15" step="0.05">
+            <span class="input-suffix">% p.a.</span>
+          </div>
+          <div style="font-size:0.75rem; color:var(--muted); margin-top:4px;">Govt rate as of Q1 FY25: 7.1%</div>
+        </div>
+      </div>
+      <div class="field">
+        <label for="ppfYears">Duration</label>
+        <div class="input-wrap">
+          <input type="number" class="no-prefix" id="ppfYears" placeholder="15" min="15" max="50">
+          <span class="input-suffix">years (min 15)</span>
+        </div>
+      </div>
+      <div class="error-msg" id="ppfError">Please fill all fields with valid values.</div>
+      <button class="btn" onclick="calculatePPF()">Calculate Returns →</button>
+
+      <div class="result-box gold" id="ppfResult">
+        <div class="result-grid">
+          <div class="result-item">
+            <div class="result-label">Maturity Value</div>
+            <div class="result-value" id="ppfMaturity">—</div>
+          </div>
+          <div class="result-item">
+            <div class="result-label">Interest Earned</div>
+            <div class="result-value" id="ppfGain">—</div>
+          </div>
+        </div>
+        <hr class="divider">
+        <div class="result-item" style="margin-bottom:10px;">
+          <div class="result-label">Total Invested</div>
+          <div style="font-size:1.1rem; font-weight:600;" id="ppfInvested">—</div>
+        </div>
+        <div class="bar-wrap">
+          <div class="bar-label-row"><span>Invested</span><span>Interest</span></div>
+          <div class="bar-track"><div class="bar-fill" id="ppfBar" style="width:0%"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Loan vs Invest ── -->
+  <div class="panel" id="panel-decision">
+    <div class="card">
+      <div class="card-title">Loan vs Invest</div>
+      <div class="card-desc">Should you use surplus money to prepay your loan or invest it? Enter your loan details and expected investment return to compare.</div>
+
+      <div class="field">
+        <label for="loanOutstanding">Outstanding Loan Principal</label>
+        <div class="input-wrap">
+          <span class="input-prefix">₹</span>
+          <input type="number" id="loanOutstanding" placeholder="2000000" min="1">
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="field">
+          <label for="loanRate">Loan Interest Rate</label>
+          <div class="input-wrap">
+            <input type="number" class="no-prefix" id="loanRate" placeholder="8.5" min="1" max="40">
+            <span class="input-suffix">% p.a.</span>
+          </div>
+        </div>
+        <div class="field">
+          <label for="loanTenure">Remaining Tenure</label>
+          <div class="input-wrap">
+            <input type="number" class="no-prefix" id="loanTenure" placeholder="10" min="1" max="30">
+            <span class="input-suffix">years</span>
+          </div>
+        </div>
+      </div>
+      <div class="field">
+        <label for="monthlyExtra">Monthly Surplus Amount</label>
+        <div class="input-wrap">
+          <span class="input-prefix">₹</span>
+          <input type="number" id="monthlyExtra" placeholder="20000" min="1">
+        </div>
+        <div style="font-size:0.75rem;color:var(--muted);margin-top:4px;">Amount you can either prepay or invest every month</div>
+      </div>
+      <div class="field">
+        <label for="investRate">Expected Investment Return</label>
+        <div class="input-wrap">
+          <input type="number" class="no-prefix" id="investRate" placeholder="12" min="1" max="50">
+          <span class="input-suffix">% p.a.</span>
+        </div>
+      </div>
+      <div class="error-msg" id="decisionError">Please fill all fields with valid values.</div>
+      <button class="btn" onclick="compareDecision()">Compare Options →</button>
+
+      <div class="result-box" id="decisionResult">
+        <div class="result-grid">
+          <div class="result-item">
+            <div class="result-label">If you Invest</div>
+            <div class="result-value" id="decInvest">—</div>
+            <div style="font-size:0.78rem;color:var(--muted);margin-top:2px;">Portfolio value after tenure</div>
+          </div>
+          <div class="result-item">
+            <div class="result-label">Interest Saved (Prepay)</div>
+            <div class="result-value" id="decSaved">—</div>
+            <div style="font-size:0.78rem;color:var(--muted);margin-top:2px;">Net interest you'd avoid</div>
+          </div>
+        </div>
+        <hr class="divider">
+        <div class="verdict" id="decVerdict"></div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+  // ── Helpers ──────────────────────────────────────────────
+
+  function fmt(n) {
+    // Indian number formatting (lakhs/crores)
+    return '₹' + Math.round(n).toLocaleString('en-IN');
+  }
+
+  function getVal(id) {
+    return parseFloat(document.getElementById(id).value);
+  }
+
+  function showError(id, show) {
+    document.getElementById(id).style.display = show ? 'block' : 'none';
+  }
+
+  function animateBar(barId, pct) {
+    const bar = document.getElementById(barId);
+    bar.style.width = '0%';
+    setTimeout(() => { bar.style.width = Math.min(100, Math.max(5, pct)) + '%'; }, 50);
+  }
+
+  // ── Tab switching ─────────────────────────────────────────
+
+  function switchTab(name, btn) {
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+    document.getElementById('panel-' + name).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  // ── SIP Calculator ────────────────────────────────────────
+
+  function calculateSIP() {
+    const P = getVal('sipAmount');
+    const rAnnual = getVal('sipRate');
+    const years = getVal('sipYears');
+
+    if (!P || !rAnnual || !years || P <= 0 || rAnnual <= 0 || years <= 0) {
+      showError('sipError', true);
+      return;
+    }
+    showError('sipError', false);
+
+    const r = rAnnual / 100 / 12;
+    const n = years * 12;
+    const invested = P * n;
+
+    let FV;
+    if (r === 0) {
+      FV = invested; // edge case: 0% return
+    } else {
+      FV = P * (((Math.pow(1 + r, n) - 1) / r) * (1 + r));
+    }
+
+    const gain = FV - invested;
+    const investedPct = (invested / FV) * 100;
+
+    document.getElementById('sipMaturity').textContent = fmt(FV);
+    document.getElementById('sipGain').textContent = fmt(gain);
+    document.getElementById('sipInvested').textContent = fmt(invested);
+    animateBar('sipBar', investedPct);
+
+    const box = document.getElementById('sipResult');
+    box.classList.add('show');
+  }
+
+  // ── PPF Calculator ────────────────────────────────────────
+
+  function calculatePPF() {
+    const P = getVal('ppfAmount');
+    const years = getVal('ppfYears');
+    const rInput = getVal('ppfRate');
+    const r = rInput / 100;
+
+    if (!P || !years || !rInput || P <= 0 || years < 15 || P > 150000 || rInput <= 0) {
+      showError('ppfError', true);
+      return;
+    }
+    showError('ppfError', false);
+
+    let total = 0;
+    for (let i = 0; i < years; i++) {
+      total = (total + P) * (1 + r);
+    }
+
+    const invested = P * years;
+    const gain = total - invested;
+    const investedPct = (invested / total) * 100;
+
+    document.getElementById('ppfMaturity').textContent = fmt(total);
+    document.getElementById('ppfGain').textContent = fmt(gain);
+    document.getElementById('ppfInvested').textContent = fmt(invested);
+    animateBar('ppfBar', investedPct);
+
+    document.getElementById('ppfResult').classList.add('show');
+  }
+
+  // ── Loan vs Invest ────────────────────────────────────────
+  // Correct approach:
+  // PREPAY path: calculate total interest that WOULD be paid on remaining loan,
+  //   then compute how much of that is saved by prepaying monthly surplus.
+  // INVEST path: compound the monthly surplus as a SIP.
+
+  function compareDecision() {
+    const principal    = getVal('loanOutstanding');
+    const loanRateAnn  = getVal('loanRate');
+    const tenureYears  = getVal('loanTenure');
+    const monthly      = getVal('monthlyExtra');
+    const investRateAnn = getVal('investRate');
+
+    if (!principal || !loanRateAnn || !tenureYears || !monthly || !investRateAnn
+        || [principal, loanRateAnn, tenureYears, monthly, investRateAnn].some(v => v <= 0)) {
+      showError('decisionError', true);
+      return;
+    }
+    showError('decisionError', false);
+
+    const rm = loanRateAnn / 100 / 12;
+    const n  = tenureYears * 12;
+
+    // EMI for original loan
+    const emi = principal * rm * Math.pow(1 + rm, n) / (Math.pow(1 + rm, n) - 1);
+    const totalPaidOriginal = emi * n;
+    const totalInterestOriginal = totalPaidOriginal - principal;
+
+    // Prepay path: EMI + surplus each month → loan clears early → interest saved
+    let balance = principal;
+    let monthsPaid = 0;
+    let totalPaidPrepay = 0;
+    while (balance > 0 && monthsPaid < n) {
+      const interest = balance * rm;
+      const principalPart = emi - interest;
+      const extraPrincipal = Math.min(monthly, balance - principalPart);
+      balance -= (principalPart + Math.max(0, extraPrincipal));
+      totalPaidPrepay += emi + Math.max(0, monthly - Math.max(0, extraPrincipal < 0 ? 0 : extraPrincipal));
+      // simpler: just track interest paid
+      monthsPaid++;
+      if (balance <= 0) break;
+    }
+    // Simpler & correct: recompute interest saved
+    let bal2 = principal;
+    let interestPaidWithPrepay = 0;
+    for (let m = 0; m < n; m++) {
+      if (bal2 <= 0) break;
+      const intCharge = bal2 * rm;
+      interestPaidWithPrepay += intCharge;
+      const prinPart = Math.min(bal2, emi - intCharge + monthly);
+      bal2 -= prinPart;
+    }
+    const interestSaved = totalInterestOriginal - interestPaidWithPrepay;
+
+    // Invest path: SIP of monthly surplus
+    const ri = investRateAnn / 100 / 12;
+    const investFV = ri === 0
+      ? monthly * n
+      : monthly * (((Math.pow(1 + ri, n) - 1) / ri) * (1 + ri));
+
+    document.getElementById('decInvest').textContent = fmt(investFV);
+    document.getElementById('decSaved').textContent  = fmt(Math.max(0, interestSaved));
+
+    const box = document.getElementById('decisionResult');
+    const verdict = document.getElementById('decVerdict');
+
+    if (investFV > interestSaved) {
+      box.className = 'result-box show green';
+      verdict.innerHTML = `<span class="verdict-icon">📈</span>
+        <span>Investing looks better — your portfolio could grow to <strong>${fmt(investFV)}</strong> vs saving 
+        <strong>${fmt(Math.max(0, interestSaved))}</strong> in interest. But consider your risk tolerance and loan type (home loan interest may be tax-deductible).</span>`;
+    } else {
+      box.className = 'result-box show rose';
+      verdict.innerHTML = `<span class="verdict-icon">🏦</span>
+        <span>Prepaying your loan looks better — you'd save <strong>${fmt(Math.max(0, interestSaved))}</strong> in interest, a guaranteed return equal to your loan rate. Investing may not beat this after taxes and risk.</span>`;
+    }
+  }
+</script>
+</body>
+</html>
