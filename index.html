@@ -294,13 +294,41 @@
       background: var(--emerald);
       transition: width 0.6s cubic-bezier(0.34,1.56,0.64,1);
     }
+   .insight-box {
+     display: none;
+     margin-top: 24px;
+     padding-top: 14px;
+     border-top: 1px solid rgba(0,0,0,0.08);
+     font-size: 0.9rem;
+     color: #444;
+     opacity: 0;
+     transform: translateY(10px);
+    }
+  /* 🎨 Insight colors */
+   .insight-box.green {
+     color: var(--emerald);
+     }
+
+   .insight-box.gold {
+     color: #8a6d1d;
+     }
+
+   .insight-box.red {
+     color: var(--rose);
+     }
+
+   .insight-box.show {
+     display: block;
+     animation: fadeUp 0.6s ease forwards;
+    }
   </style>
 </head>
 <body>
 
 <header>
   <h1>Wealth<span>Pulse</span></h1>
-  <p>Financial calculators built for Indian investors</p>
+  <p>Don’t guess. Calculate your wealth decisions.</p>
+  
 </header>
 
 <nav>
@@ -344,7 +372,7 @@
       <button class="btn" onclick="calculateSIP()">Calculate Growth →</button>
 
       <div class="result-box gold" id="sipResult">
-        <div class="result-grid">
+          <div class="result-grid">
           <div class="result-item">
             <div class="result-label">Maturity Value</div>
             <div class="result-value" id="sipMaturity">—</div>
@@ -361,13 +389,21 @@
         </div>
         <div class="bar-wrap">
           <div class="bar-label-row">
-            <span>Invested</span><span>Returns</span>
+           <span>Invested</span><span>Returns</span>
           </div>
-          <div class="bar-track"><div class="bar-fill" id="sipBar" style="width:0%"></div></div>
+         <div class="bar-track">
+          <div class="bar-fill" id="sipBar" style="width:0%"></div>
+         </div>
         </div>
-      </div>
-    </div>
-  </div>
+
+    <!-- ✅ Insight (final element inside result box) -->
+      <div id="sipInsightBox" class="insight-box">
+       💡 <span id="sipInsight">At this pace, you're building strong long-term wealth. Stay consistent.</span>
+       </div>
+
+   </div> <!-- END sipResult -->
+   </div> <!-- END card -->
+   </div> <!-- END panel -->
 
   <!-- ── PPF ── -->
   <div class="panel" id="panel-ppf">
@@ -562,8 +598,43 @@
     document.getElementById('sipInvested').textContent = fmt(invested);
     animateBar('sipBar', investedPct);
 
-    const box = document.getElementById('sipResult');
-    box.classList.add('show');
+// 🔥 Insight logic
+let insight = "";
+let insightClass = "";
+
+if (years >= 15 && rAnnual >= 12) {
+  insight = "You're on track to build serious long-term wealth. Consistency will be your biggest advantage.";
+  insightClass = "green";
+} else if (years < 5) {
+  insight = "This is a short horizon. Wealth creation improves significantly with longer duration.";
+  insightClass = "red";
+} else if (rAnnual < 10) {
+  insight = "Your expected return is conservative. Higher-return assets could accelerate wealth creation (with risk).";
+  insightClass = "gold";
+} else {
+  insight = "Good balance of time and returns. Stay invested and avoid interruptions.";
+  insightClass = "gold";
+}
+
+// ✅ Update insight text
+document.getElementById("sipInsight").textContent = insight;
+
+// ✅ SAFE handling (prevents crash)
+const insightBox = document.getElementById('sipInsightBox');
+
+if (insightBox) {
+  insightBox.classList.remove('green', 'gold', 'red');
+  insightBox.classList.add(insightClass);
+
+  insightBox.classList.remove('show');
+  setTimeout(() => {
+    insightBox.classList.add('show');
+  }, 300);
+}
+
+// ✅ Show result box
+const box = document.getElementById('sipResult');
+box.classList.add('show');
   }
 
   // ── PPF Calculator ────────────────────────────────────────
