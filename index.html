@@ -14,18 +14,8 @@
     gtag('config', 'G-P3HD66K36Y');
   </script>
 
-<!-- Microsoft Clarity: User behavior tracking (heatmaps & session recordings) -->
-<script type="text/javascript">
-    (function(c,l,a,r,i,t,y){
-        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
-        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-    })(window, document, "clarity", "script", "w4ct6u0o81");
-</script>
-  
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-  
-<style>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
@@ -134,8 +124,8 @@
       padding: 0 20px;
     }
 
-    .panel { display: none; animation: fadeUp 0.35s ease forwards; }
-    .panel.active { display: block; }
+    .panel { display: none; }
+    .panel.active { display: block; animation: fadeUp 0.35s ease forwards; }
 
     @keyframes fadeUp {
       from { opacity: 0; transform: translateY(14px); }
@@ -756,14 +746,29 @@
 
         <div class="result-grid">
           <div class="result-item">
-            <div class="result-label">If you Invest</div>
+            <div class="result-label">Portfolio Value (Invest)</div>
             <div class="result-value" id="decInvest">—</div>
-            <div class="result-sub">Portfolio value after tenure</div>
+            <div class="result-sub">Total portfolio value after tenure</div>
           </div>
+          <div class="result-item">
+            <div class="result-label">Net Gain (Invest)</div>
+            <div class="result-value" id="decNetGain">—</div>
+            <div class="result-sub">Returns above what you put in</div>
+          </div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="result-grid">
           <div class="result-item">
             <div class="result-label">Interest Saved (Prepay)</div>
             <div class="result-value" id="decSaved">—</div>
-            <div class="result-sub">Net interest you'd avoid</div>
+            <div class="result-sub">Guaranteed saving — equals your loan rate</div>
+          </div>
+          <div class="result-item">
+            <div class="result-label">Total Amount Invested</div>
+            <div style="font-size:1.1rem; font-weight:600;" id="decTotalInvested">—</div>
+            <div class="result-sub">Surplus × months</div>
           </div>
         </div>
 
@@ -1002,17 +1007,26 @@
     if (on) {
       row.classList.add('show');
       if (_lastSipFV > 0) {
-        const realVal = _lastSipFV / Math.pow(1.06, _lastSipYears);
-        // CHANGE 4: Show motivating message based on how much real value was preserved
-        const pctPreserved = Math.round((realVal / _lastSipFV) * 100);
-        document.getElementById('sipRealValue').textContent = fmt(realVal);
-        const msgEl = document.getElementById('sipInflationMsg');
-        msgEl.textContent = pctPreserved >= 60
-          ? `💡 Even after accounting for inflation, you're preserving ${pctPreserved}% of your corpus's purchasing power. The earlier you start, the more you beat inflation.`
-          : `💡 This shows why starting early matters most — a longer SIP horizon dramatically outpaces inflation. Every additional year of investing compounds your real returns.`;
+        updateInflationDisplay();
       }
     } else {
       row.classList.remove('show');
+    }
+  }
+
+  function updateInflationDisplay() {
+    const realVal      = _lastSipFV / Math.pow(1.06, _lastSipYears);
+    // Correctly compute how much purchasing power is ERODED by inflation
+    // e.g. 10 yrs @ 6% => 1/1.06^10 = 55.8% retained => 44.2% eroded
+    const pctEroded    = Math.round((1 - realVal / _lastSipFV) * 100);
+    document.getElementById('sipRealValue').textContent = fmt(realVal);
+    const msgEl = document.getElementById('sipInflationMsg');
+    if (_lastSipYears <= 5) {
+      msgEl.textContent = `💡 Over ${_lastSipYears} years, inflation at 6% p.a. erodes ${pctEroded}% of purchasing power. Even so, staying invested beats keeping cash — and a longer horizon shrinks this gap significantly.`;
+    } else if (_lastSipYears <= 15) {
+      msgEl.textContent = `💡 Inflation erodes ${pctEroded}% of your corpus's value over ${_lastSipYears} years. Your SIP returns still grow real wealth meaningfully. The antidote is to start early and stay consistent.`;
+    } else {
+      msgEl.textContent = `💡 Over ${_lastSipYears} years, inflation at 6% p.a. erodes ${pctEroded}% of purchasing power. This is exactly why long-term equity SIPs exist — their returns historically outpace inflation by a wide margin over 15+ year horizons.`;
     }
   }
 
@@ -1029,20 +1043,21 @@
       const years     = getVal('sipYears');
       const stepUp    = getVal('sipStepUp') || 0;
       const stepNote  = stepUp > 0 ? ` (with ${stepUp}% annual step-up)` : '';
-      text = `💰 My SIP Projection — WealthPulse\n\nMonthly SIP: ${fmt(P)}${stepNote}\nDuration: ${years} years\n\n📈 Maturity Value: ${maturity}\n💵 Total Invested: ${invested}\n🏆 Wealth Gained: ${gain}\n\n✨ Calculate yours free → ${SITE_URL}`;
+      text = `💰 My SIP Projection — WealthPulse\n\nMonthly SIP: ${fmt(P)}${stepNote}\nDuration: ${years} years\n\n📈 Maturity Value: ${maturity}\n💵 Total Invested: ${invested}\n🏆 Wealth Gained: ${gain}\n\n✨ Calculate yours free on WealthPulse → ${SITE_URL}`;
     } else if (type === 'ppf') {
       const maturity = document.getElementById('ppfMaturity').textContent;
       const invested = document.getElementById('ppfInvested').textContent;
       const gain     = document.getElementById('ppfGain').textContent;
       const P        = getVal('ppfAmount');
       const years    = getVal('ppfYears');
-      text = `🏦 My PPF Projection — WealthPulse\n\nYearly Investment: ${fmt(P)}\nDuration: ${years} years\n\n📈 Maturity Value: ${maturity}\n💵 Total Invested: ${invested}\n🏆 Interest Earned: ${gain}\n\n✅ 100% tax-free (EEE status)\n\n✨ Calculate yours free → ${SITE_URL}`;
+      text = `🏦 My PPF Projection — WealthPulse\n\nYearly Investment: ${fmt(P)}\nDuration: ${years} years\n\n📈 Maturity Value: ${maturity}\n💵 Total Invested: ${invested}\n🏆 Interest Earned: ${gain}\n\n✅ 100% tax-free (EEE status)\n\n✨ Calculate yours free on WealthPulse → ${SITE_URL}`;
     } else if (type === 'decision') {
       const invest  = document.getElementById('decInvest').textContent;
+      const netGain = document.getElementById('decNetGain').textContent;
       const saved   = document.getElementById('decSaved').textContent;
       const time    = document.getElementById('decTimeSaved').textContent;
       const beven   = document.getElementById('decBreakeven').textContent;
-      text = `⚖️ Loan vs Invest — WealthPulse\n\nIf I invest my surplus: ${invest}\nIf I prepay my loan, I save: ${saved} in interest\n\nBreak-even return needed: ${beven}\nLoan closure advantage: ${time}\n\n✨ Run your own comparison free → ${SITE_URL}`;
+      text = `⚖️ Loan vs Invest — WealthPulse\n\nIf I invest my surplus:\n  Portfolio Value: ${invest}\n  Net Gain: ${netGain}\n\nIf I prepay my loan:\n  Interest Saved: ${saved} (guaranteed)\n\nBreak-even return: ${beven}\nLoan closure advantage: ${time}\n\n✨ Run your own comparison on WealthPulse → ${SITE_URL}`;
     }
 
     navigator.clipboard.writeText(text).then(() => {
@@ -1107,8 +1122,7 @@
 
     // Refresh inflation if toggle is on
     if (document.getElementById('inflationToggle').checked) {
-      const realVal = FV / Math.pow(1.06, years);
-      document.getElementById('sipRealValue').textContent = fmt(realVal);
+      updateInflationDisplay();
     }
 
     // Insight
@@ -1263,9 +1277,15 @@
     }
     const yearsSaved = (n - monthsWithPrepay) / 12;
 
-    // CHANGE 5: Count-up on invest and saved values
-    countUp(document.getElementById('decInvest'), investFV);
-    countUp(document.getElementById('decSaved'),  Math.max(0, interestSaved), 800);
+    // CHANGE 2: Correct comparison — net investment gain vs interest saved (both are gains from same surplus)
+    const totalSurplusInvested = monthly * n;
+    const investNetGain        = investFV - totalSurplusInvested;
+
+    // CHANGE 5: Count-up animations
+    countUp(document.getElementById('decInvest'),  investFV);
+    countUp(document.getElementById('decNetGain'), investNetGain, 850);
+    countUp(document.getElementById('decSaved'),   Math.max(0, interestSaved), 800);
+    document.getElementById('decTotalInvested').textContent = fmt(totalSurplusInvested);
     countUpPct(document.getElementById('decBreakeven'), loanRateAnn, 2, '%', 700);
     document.getElementById('decTimeSaved').textContent = yearsSaved > 0.08
       ? yearsSaved.toFixed(1) + ' years earlier'
@@ -1274,17 +1294,27 @@
     const box     = document.getElementById('decisionResult');
     const verdict = document.getElementById('decVerdict');
 
-    // CHANGE 3: Verdict with coloured pill background styling
-    if (investFV > interestSaved) {
-      box.className = 'result-box show green';
+    // CHANGE 2: Decision based on net gain vs interest saved (fair apples-to-apples)
+    if (investNetGain > Math.max(0, interestSaved)) {
+      box.className     = 'result-box show green';
       verdict.className = 'verdict verdict-invest';
       verdict.innerHTML = `<span class="verdict-icon">📈</span>
-        <span>Investing looks better — your portfolio could grow to <strong>${fmt(investFV)}</strong>, compared to saving <strong>${fmt(Math.max(0, interestSaved))}</strong> in interest by prepaying. Note: home loan interest may be partially tax-deductible under Section 24B.</span>`;
+        <div>
+          <div>Investing looks better on numbers — your net gain of <strong>${fmt(investNetGain)}</strong> beats the <strong>${fmt(Math.max(0, interestSaved))}</strong> in guaranteed interest saved by prepaying.</div>
+          <div style="margin-top:8px; padding:10px 12px; background:rgba(201,168,76,0.15); border-radius:7px; font-size:0.82rem; color:#7a5c10; line-height:1.5;">
+            ⚠️ <strong>Important:</strong> Investment returns are market-linked and not guaranteed. Loan prepayment savings are certain and risk-free. Consider your risk appetite and job security before deciding.
+          </div>
+        </div>`;
     } else {
-      box.className = 'result-box show rose';
+      box.className     = 'result-box show rose';
       verdict.className = 'verdict verdict-prepay';
       verdict.innerHTML = `<span class="verdict-icon">🏦</span>
-        <span>Prepaying your loan looks better — you'd save <strong>${fmt(Math.max(0, interestSaved))}</strong> in interest, a guaranteed, risk-free return equal to your loan rate. Investing may not beat this after taxes and market volatility.</span>`;
+        <div>
+          <div>Prepaying your loan looks better — you'd save <strong>${fmt(Math.max(0, interestSaved))}</strong> in interest, which exceeds the projected net investment gain of <strong>${fmt(investNetGain)}</strong>.</div>
+          <div style="margin-top:8px; padding:10px 12px; background:rgba(193,18,31,0.08); border-radius:7px; font-size:0.82rem; color:#7a0c12; line-height:1.5;">
+            ✅ <strong>Prepayment advantage:</strong> This saving is guaranteed and risk-free — equivalent to earning your loan rate tax-free. Investment returns at ${investRateAnn}% are projected, not assured.
+          </div>
+        </div>`;
     }
 
     document.getElementById('decStale').classList.remove('show');
