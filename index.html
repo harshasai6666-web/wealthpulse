@@ -4,8 +4,28 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>WealthPulse — Financial Calculators</title>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <style>
+
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-P3HD66K36Y"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-P3HD66K36Y');
+  </script>
+
+<!-- Microsoft Clarity: User behavior tracking (heatmaps & session recordings) -->
+<script type="text/javascript">
+    (function(c,l,a,r,i,t,y){
+        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", "w4ct6u0o81");
+</script>
+  
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  
+<style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
@@ -63,6 +83,19 @@
     }
 
     /* ── Nav tabs ── */
+    /* CHANGE 1: Loan vs Invest centred, PPF at right end — achieved via order */
+    .nav-wrap {
+      position: relative;
+      background: var(--ink);
+    }
+    .nav-wrap::after {
+      content: '';
+      position: absolute;
+      right: 0; top: 0; bottom: 0;
+      width: 40px;
+      background: linear-gradient(to right, transparent, rgba(26,26,46,0.95));
+      pointer-events: none;
+    }
     nav {
       display: flex;
       overflow-x: auto;
@@ -101,7 +134,7 @@
       padding: 0 20px;
     }
 
-    .panel { display: none; animation: fadeUp 0.35s ease; }
+    .panel { display: none; animation: fadeUp 0.35s ease forwards; }
     .panel.active { display: block; }
 
     @keyframes fadeUp {
@@ -140,9 +173,7 @@
       color: var(--muted);
       margin-bottom: 6px;
     }
-    .input-wrap {
-      position: relative;
-    }
+    .input-wrap { position: relative; }
     .input-prefix {
       position: absolute;
       left: 12px;
@@ -172,6 +203,17 @@
       border-color: var(--gold);
       box-shadow: 0 0 0 3px rgba(201,168,76,0.15);
     }
+    input.input-error {
+      border-color: var(--rose) !important;
+      box-shadow: 0 0 0 3px rgba(193,18,31,0.1) !important;
+    }
+    .field-error {
+      font-size: 0.78rem;
+      color: var(--rose);
+      margin-top: 4px;
+      display: none;
+    }
+    .field-error.show { display: block; }
     input.no-prefix { padding-left: 14px; }
     .input-suffix {
       position: absolute;
@@ -182,12 +224,17 @@
       color: var(--muted);
       pointer-events: none;
     }
+    .field-hint {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 4px;
+    }
 
     /* ── Grid ── */
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
     @media (max-width: 480px) { .grid-2 { grid-template-columns: 1fr; } }
 
-    /* ── Fixed PPF notice ── */
+    /* ── Rate badge ── */
     .rate-badge {
       display: inline-flex;
       align-items: center;
@@ -201,7 +248,94 @@
       margin-bottom: 20px;
     }
 
-    /* ── Calculate button ── */
+    /* ── Toggle row (inflation) ── */
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 18px;
+      margin-bottom: 4px;
+    }
+    .toggle-label {
+      font-size: 0.82rem;
+      color: var(--muted);
+      font-weight: 500;
+    }
+    .toggle {
+      position: relative;
+      width: 36px;
+      height: 20px;
+      flex-shrink: 0;
+    }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-track {
+      position: absolute;
+      inset: 0;
+      background: var(--border);
+      border-radius: 99px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .toggle input:checked + .toggle-track { background: var(--emerald); }
+    .toggle-track::after {
+      content: '';
+      position: absolute;
+      left: 3px; top: 3px;
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: white;
+      transition: transform 0.2s;
+    }
+    .toggle input:checked + .toggle-track::after { transform: translateX(16px); }
+
+    /* CHANGE 4: Inflation row — calm, motivating, not alarming red */
+    .inflation-row {
+      display: none;
+      margin-top: 12px;
+      padding: 14px 16px;
+      background: rgba(255,255,255,0.6);
+      border: 1px solid rgba(0,0,0,0.07);
+      border-radius: 10px;
+    }
+    .inflation-row.show { display: block; animation: fadeUp 0.3s ease forwards; }
+    .inflation-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--muted);
+      margin-bottom: 3px;
+    }
+    .inflation-value {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.4rem;
+      color: var(--ink);          /* neutral, not red */
+      opacity: 0.75;              /* softened, secondary to maturity */
+    }
+    .inflation-message {
+      font-size: 0.8rem;
+      color: var(--emerald);      /* motivating green, not alarming */
+      margin-top: 6px;
+      line-height: 1.5;
+      font-weight: 500;
+    }
+
+    /* ── Step-up badge ── */
+    .stepup-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: var(--emerald-light);
+      color: var(--emerald);
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 99px;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+
+    /* ── Buttons ── */
     .btn {
       width: 100%;
       padding: 13px;
@@ -220,14 +354,59 @@
     .btn:hover { background: #2d2d4e; }
     .btn:active { transform: scale(0.99); }
 
+    .btn-share {
+      width: 100%;
+      padding: 10px;
+      background: transparent;
+      color: var(--ink);
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 14px;
+      letter-spacing: 0.2px;
+      transition: background 0.2s, border-color 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+    }
+    .btn-share:hover { background: var(--paper); border-color: var(--ink); }
+
+    /* Share toast */
+    .share-toast {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--ink);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s, transform 0.3s;
+      z-index: 999;
+      white-space: nowrap;
+    }
+    .share-toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
     /* ── Result box ── */
     .result-box {
       margin-top: 24px;
       border-radius: 12px;
       padding: 24px;
       display: none;
+      position: relative;
     }
-    .result-box.show { display: block; animation: fadeUp 0.3s ease; }
+    .result-box.show { display: block; animation: fadeUp 0.3s ease forwards; }
     .result-box.green { background: var(--emerald-light); border: 1px solid #b7e4c7; }
     .result-box.gold  { background: var(--gold-light);    border: 1px solid #dfc98a; }
     .result-box.rose  { background: var(--rose-light);    border: 1px solid #f5c6c6; }
@@ -240,10 +419,16 @@
       opacity: 0.7;
       margin-bottom: 2px;
     }
+    /* CHANGE 5: result-value used as target for count-up animation */
     .result-value {
       font-family: 'DM Serif Display', serif;
       font-size: 1.9rem;
       line-height: 1.1;
+    }
+    .result-sub {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-top: 3px;
     }
     .result-grid {
       display: grid;
@@ -252,29 +437,53 @@
       margin-bottom: 16px;
     }
     @media (max-width: 480px) { .result-grid { grid-template-columns: 1fr; } }
-    .result-item { }
-    .divider { border: none; border-top: 1px solid rgba(0,0,0,0.08); margin: 16px 0; }
+    .result-item { padding-bottom: 6px; }
+    .divider { border: none; border-top: 1px solid rgba(0,0,0,0.08); margin: 20px 0; }
 
+    /* CHANGE 3: verdict now has its own styled pill background */
     .verdict {
       display: flex;
       align-items: flex-start;
-      gap: 10px;
+      gap: 12px;
       font-size: 0.9rem;
       font-weight: 500;
+      padding: 16px 18px;
+      border-radius: 10px;
+      margin-top: 4px;
+      line-height: 1.55;
     }
-    .verdict-icon { font-size: 1.2rem; flex-shrink: 0; }
+    .verdict.verdict-invest {
+      background: rgba(45,106,79,0.13);
+      border: 1px solid rgba(45,106,79,0.25);
+      color: #1a4731;
+    }
+    .verdict.verdict-prepay {
+      background: rgba(193,18,31,0.1);
+      border: 1px solid rgba(193,18,31,0.2);
+      color: #7a0c12;
+    }
+    .verdict-icon { font-size: 1.4rem; flex-shrink: 0; margin-top: 1px; }
 
-    .error-msg {
-      color: var(--rose);
-      font-size: 0.83rem;
-      margin-top: 8px;
+    /* Stale overlay */
+    .stale-overlay {
       display: none;
+      position: absolute;
+      inset: 0;
+      background: rgba(250,249,246,0.85);
+      border-radius: 12px;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--muted);
+      gap: 6px;
+      z-index: 2;
+      backdrop-filter: blur(2px);
     }
+    .stale-overlay.show { display: flex; }
 
     /* ── Breakdown bar ── */
-    .bar-wrap {
-      margin-top: 14px;
-    }
+    .bar-wrap { margin-top: 14px; }
     .bar-label-row {
       display: flex;
       justify-content: space-between;
@@ -294,52 +503,81 @@
       background: var(--emerald);
       transition: width 0.6s cubic-bezier(0.34,1.56,0.64,1);
     }
-   .insight-box {
-     display: none;
-     margin-top: 24px;
-     padding-top: 14px;
-     border-top: 1px solid rgba(0,0,0,0.08);
-     font-size: 0.9rem;
-     color: #444;
-     opacity: 0;
-     transform: translateY(10px);
+
+    /* ── Insight box ── */
+    .insight-box {
+      display: none;
+      margin-top: 16px;
+      padding: 12px 14px;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      line-height: 1.5;
+      background: rgba(255,255,255,0.5);
+      border: 1px solid rgba(0,0,0,0.07);
     }
-  /* 🎨 Insight colors */
-   .insight-box.green {
-     color: var(--emerald);
-     }
-
-   .insight-box.gold {
-     color: #8a6d1d;
-     }
-
-   .insight-box.red {
-     color: var(--rose);
-     }
-
-   .insight-box.show {
-     display: block;
-     animation: fadeUp 0.6s ease forwards;
+    .insight-box.green { color: var(--emerald); }
+    .insight-box.gold  { color: #8a6d1d; }
+    .insight-box.red   { color: var(--rose); }
+    .insight-box.show  {
+      display: block;
+      animation: fadeUp 0.6s ease forwards;
     }
+
+    /* ── PPF tax callout ── */
+    .tax-callout {
+      margin-top: 14px;
+      padding: 12px 14px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.5);
+      border: 1px solid rgba(0,0,0,0.07);
+      font-size: 0.88rem;
+      color: #7a5c10;
+      display: none;
+      line-height: 1.5;
+    }
+    .tax-callout.show {
+      display: block;
+      animation: fadeUp 0.4s ease forwards;
+    }
+
+    /* ── Decision insight rows ── */
+    .decision-insights {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-top: 10px;
+    }
+
+    /* CHANGE 5: count-up keyframe pulse on result values */
+    @keyframes valuePop {
+      0%   { transform: scale(1); }
+      50%  { transform: scale(1.04); }
+      100% { transform: scale(1); }
+    }
+    .value-pop { animation: valuePop 0.35s ease; }
   </style>
 </head>
 <body>
 
 <header>
   <h1>Wealth<span>Pulse</span></h1>
-  <p>Don’t guess. Calculate your wealth decisions.</p>
-  
+  <p>Don't guess. Calculate your wealth decisions.</p>
 </header>
 
-<nav>
-  <button class="active" onclick="switchTab('sip', this)">SIP Calculator</button>
-  <button onclick="switchTab('ppf', this)">PPF Calculator</button>
-  <button onclick="switchTab('decision', this)">Loan vs Invest</button>
-</nav>
+<!-- CHANGE 1: Tab order — SIP | Loan vs Invest (centre) | PPF (right) -->
+<div class="nav-wrap">
+  <nav>
+    <button class="active" onclick="switchTab('sip', this)">SIP Calculator</button>
+    <button onclick="switchTab('decision', this)">Loan vs Invest</button>
+    <button onclick="switchTab('ppf', this)">PPF Calculator</button>
+  </nav>
+</div>
 
 <main>
 
-  <!-- ── SIP ── -->
+  <!-- ══════════════════════════════════════════
+       SIP CALCULATOR
+  ══════════════════════════════════════════ -->
   <div class="panel active" id="panel-sip">
     <div class="card">
       <div class="card-title">SIP Calculator</div>
@@ -349,30 +587,53 @@
         <label for="sipAmount">Monthly Investment</label>
         <div class="input-wrap">
           <span class="input-prefix">₹</span>
-          <input type="number" id="sipAmount" placeholder="5000" min="100">
+          <input type="number" id="sipAmount" inputmode="decimal" pattern="[0-9]*"
+                 placeholder="e.g. 5,000" min="100" oninput="markStale('sipResult','sipStale')">
         </div>
+        <div class="field-hint">Minimum ₹100/month</div>
+        <div class="field-error" id="sipAmountErr">Enter a valid monthly investment (min ₹100)</div>
       </div>
+
       <div class="grid-2">
         <div class="field">
           <label for="sipRate">Expected Return</label>
           <div class="input-wrap">
-            <input type="number" class="no-prefix" id="sipRate" placeholder="12" min="1" max="50">
+            <input type="number" class="no-prefix" id="sipRate" inputmode="decimal" pattern="[0-9]*"
+                   placeholder="e.g. 12" min="1" max="50" oninput="markStale('sipResult','sipStale')">
             <span class="input-suffix">% p.a.</span>
           </div>
+          <div class="field-error" id="sipRateErr">Enter a return between 1–50%</div>
         </div>
         <div class="field">
           <label for="sipYears">Duration</label>
           <div class="input-wrap">
-            <input type="number" class="no-prefix" id="sipYears" placeholder="10" min="1" max="50">
+            <input type="number" class="no-prefix" id="sipYears" inputmode="decimal" pattern="[0-9]*"
+                   placeholder="e.g. 10" min="1" max="50" oninput="markStale('sipResult','sipStale')">
             <span class="input-suffix">years</span>
           </div>
+          <div class="field-error" id="sipYearsErr">Enter a duration between 1–50 years</div>
         </div>
       </div>
-      <div class="error-msg" id="sipError">Please fill all fields with valid values.</div>
+
+      <div class="field">
+        <label for="sipStepUp">
+          Annual Step-up
+          <span class="stepup-badge">✦ New</span>
+        </label>
+        <div class="input-wrap">
+          <input type="number" class="no-prefix" id="sipStepUp" inputmode="decimal" pattern="[0-9]*"
+                 placeholder="e.g. 10" min="0" max="50" value="0" oninput="markStale('sipResult','sipStale')">
+          <span class="input-suffix">% / year</span>
+        </div>
+        <div class="field-hint">Increase your SIP by this % every year (e.g. match your annual increment). Set 0 to skip.</div>
+      </div>
+
       <button class="btn" onclick="calculateSIP()">Calculate Growth →</button>
 
       <div class="result-box gold" id="sipResult">
-          <div class="result-grid">
+        <div class="stale-overlay" id="sipStale">↻ Inputs changed — please recalculate</div>
+
+        <div class="result-grid">
           <div class="result-item">
             <div class="result-label">Maturity Value</div>
             <div class="result-value" id="sipMaturity">—</div>
@@ -382,34 +643,166 @@
             <div class="result-value" id="sipGain">—</div>
           </div>
         </div>
+
         <hr class="divider">
+
         <div class="result-item" style="margin-bottom:10px;">
           <div class="result-label">Total Invested</div>
           <div style="font-size:1.1rem; font-weight:600;" id="sipInvested">—</div>
         </div>
         <div class="bar-wrap">
-          <div class="bar-label-row">
-           <span>Invested</span><span>Returns</span>
+          <div class="bar-label-row"><span>Invested</span><span>Returns</span></div>
+          <div class="bar-track">
+            <div class="bar-fill" id="sipBar" style="width:0%"></div>
           </div>
-         <div class="bar-track">
-          <div class="bar-fill" id="sipBar" style="width:0%"></div>
-         </div>
         </div>
 
-    <!-- ✅ Insight (final element inside result box) -->
-      <div id="sipInsightBox" class="insight-box">
-       💡 <span id="sipInsight">At this pace, you're building strong long-term wealth. Stay consistent.</span>
-       </div>
+        <!-- CHANGE 4: Inflation toggle & redesigned row -->
+        <div class="toggle-row">
+          <label class="toggle" for="inflationToggle" title="Show corpus in today's purchasing power">
+            <input type="checkbox" id="inflationToggle" onchange="toggleInflation()">
+            <span class="toggle-track"></span>
+          </label>
+          <span class="toggle-label">Show inflation-adjusted value (@ 6% p.a.)</span>
+        </div>
 
-   </div> <!-- END sipResult -->
-   </div> <!-- END card -->
-   </div> <!-- END panel -->
+        <!-- CHANGE 4: Calm styling + motivating copy, not alarming red -->
+        <div class="inflation-row" id="inflationRow">
+          <div class="inflation-label">Equivalent Purchasing Power (Today's ₹)</div>
+          <div class="inflation-value" id="sipRealValue">—</div>
+          <div class="inflation-message" id="sipInflationMsg">
+            💡 Starting earlier is the most powerful antidote to inflation — every year you delay costs more than you think.
+          </div>
+        </div>
 
-  <!-- ── PPF ── -->
+        <div id="sipInsightBox" class="insight-box">
+          💡 <span id="sipInsight"></span>
+        </div>
+
+        <!-- CHANGE 2: Correct GitHub Pages link -->
+        <button class="btn-share" onclick="shareResult('sip')">
+          <span>🔗</span> Share this result
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════
+       LOAN VS INVEST  (CHANGE 1: now centre tab)
+  ══════════════════════════════════════════ -->
+  <div class="panel" id="panel-decision">
+    <div class="card">
+      <div class="card-title">Loan vs Invest</div>
+      <div class="card-desc">Should you use surplus money to prepay your loan or invest it? Enter your details to compare both paths.</div>
+
+      <div class="field">
+        <label for="loanOutstanding">Outstanding Loan Principal</label>
+        <div class="input-wrap">
+          <span class="input-prefix">₹</span>
+          <input type="number" id="loanOutstanding" inputmode="decimal" pattern="[0-9]*"
+                 placeholder="e.g. 20,00,000" min="1" oninput="markStale('decisionResult','decStale')">
+        </div>
+        <div class="field-hint">e.g. ₹20,00,000 for a ₹20 lakh outstanding loan</div>
+        <div class="field-error" id="decPrincipalErr">Enter a valid outstanding principal amount</div>
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <label for="loanRate">Loan Interest Rate</label>
+          <div class="input-wrap">
+            <input type="number" class="no-prefix" id="loanRate" inputmode="decimal" pattern="[0-9]*"
+                   placeholder="e.g. 8.5" min="1" max="40" oninput="markStale('decisionResult','decStale')">
+            <span class="input-suffix">% p.a.</span>
+          </div>
+          <div class="field-error" id="decLoanRateErr">Enter a valid loan rate (1–40%)</div>
+        </div>
+        <div class="field">
+          <label for="loanTenure">Remaining Tenure</label>
+          <div class="input-wrap">
+            <input type="number" class="no-prefix" id="loanTenure" inputmode="decimal" pattern="[0-9]*"
+                   placeholder="e.g. 10" min="1" max="30" oninput="markStale('decisionResult','decStale')">
+            <span class="input-suffix">years</span>
+          </div>
+          <div class="field-error" id="decTenureErr">Enter a remaining tenure (1–30 years)</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="monthlyExtra">Monthly Surplus Amount</label>
+        <div class="input-wrap">
+          <span class="input-prefix">₹</span>
+          <input type="number" id="monthlyExtra" inputmode="decimal" pattern="[0-9]*"
+                 placeholder="e.g. 20,000" min="1" oninput="markStale('decisionResult','decStale')">
+        </div>
+        <div class="field-hint">Amount you can either prepay or invest every month</div>
+        <div class="field-error" id="decSurplusErr">Enter a valid monthly surplus amount</div>
+      </div>
+
+      <div class="field">
+        <label for="investRate">Expected Investment Return</label>
+        <div class="input-wrap">
+          <input type="number" class="no-prefix" id="investRate" inputmode="decimal" pattern="[0-9]*"
+                 placeholder="e.g. 12" min="1" max="50" oninput="markStale('decisionResult','decStale')">
+          <span class="input-suffix">% p.a.</span>
+        </div>
+        <div class="field-error" id="decInvestRateErr">Enter an expected return (1–50%)</div>
+      </div>
+
+      <button class="btn" onclick="compareDecision()">Compare Options →</button>
+
+      <div class="result-box" id="decisionResult">
+        <div class="stale-overlay" id="decStale">↻ Inputs changed — please recalculate</div>
+
+        <div class="result-grid">
+          <div class="result-item">
+            <div class="result-label">If you Invest</div>
+            <div class="result-value" id="decInvest">—</div>
+            <div class="result-sub">Portfolio value after tenure</div>
+          </div>
+          <div class="result-item">
+            <div class="result-label">Interest Saved (Prepay)</div>
+            <div class="result-value" id="decSaved">—</div>
+            <div class="result-sub">Net interest you'd avoid</div>
+          </div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="decision-insights">
+          <div class="result-item">
+            <div class="result-label">Break-even Return</div>
+            <div style="font-size:1.1rem; font-weight:600;" id="decBreakeven">—</div>
+            <div class="result-sub">If your investments earn more than this, investing wins. Otherwise, prepay.</div>
+          </div>
+          <div class="result-item">
+            <div class="result-label">Loan Closure Advantage</div>
+            <div style="font-size:1.1rem; font-weight:600;" id="decTimeSaved">—</div>
+            <div class="result-sub">How much earlier you become debt-free by prepaying.</div>
+          </div>
+        </div>
+
+        <hr class="divider">
+
+        <!-- CHANGE 3: Verdict with coloured pill background -->
+        <div class="verdict" id="decVerdict"></div>
+
+        <!-- CHANGE 2: Correct GitHub Pages link -->
+        <button class="btn-share" onclick="shareResult('decision')">
+          <span>🔗</span> Share this result
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════
+       PPF CALCULATOR  (CHANGE 1: now right tab)
+  ══════════════════════════════════════════ -->
   <div class="panel" id="panel-ppf">
     <div class="card">
       <div class="card-title">PPF Calculator</div>
-      <div class="card-desc">Public Provident Fund — a government-backed, tax-free savings instrument.</div>
+      <div class="card-desc">Public Provident Fund — a government-backed, tax-free savings instrument with EEE tax status.</div>
 
       <div class="rate-badge">
         📋 PPF rate is set by the government each quarter — update it below if it has changed.
@@ -420,30 +813,50 @@
           <label for="ppfAmount">Yearly Investment</label>
           <div class="input-wrap">
             <span class="input-prefix">₹</span>
-            <input type="number" id="ppfAmount" placeholder="150000" min="500" max="150000">
+            <input type="number" id="ppfAmount" inputmode="decimal" pattern="[0-9]*"
+                   placeholder="e.g. 1,50,000" min="500" max="150000" oninput="markStale('ppfResult','ppfStale')">
           </div>
-          <div style="font-size:0.75rem; color:var(--muted); margin-top:4px;">Max allowed: ₹1,50,000 per year</div>
+          <div class="field-hint">Min ₹500 · Max ₹1,50,000 per year</div>
+          <div class="field-error" id="ppfAmountErr">Enter a yearly amount between ₹500 and ₹1,50,000</div>
         </div>
         <div class="field">
           <label for="ppfRate">Current PPF Rate</label>
           <div class="input-wrap">
-            <input type="number" class="no-prefix" id="ppfRate" value="7.1" min="1" max="15" step="0.05">
+            <input type="number" class="no-prefix" id="ppfRate" inputmode="decimal" pattern="[0-9]*"
+                   value="7.1" min="1" max="15" step="0.05" oninput="markStale('ppfResult','ppfStale')">
             <span class="input-suffix">% p.a.</span>
           </div>
-          <div style="font-size:0.75rem; color:var(--muted); margin-top:4px;">Govt rate as of Q1 FY25: 7.1%</div>
+          <div class="field-hint">Govt rate as of Q1 FY25: 7.1%</div>
+          <div class="field-error" id="ppfRateErr">Enter a valid interest rate (1–15%)</div>
         </div>
       </div>
+
       <div class="field">
         <label for="ppfYears">Duration</label>
         <div class="input-wrap">
-          <input type="number" class="no-prefix" id="ppfYears" placeholder="15" min="15" max="50">
-          <span class="input-suffix">years (min 15)</span>
+          <input type="number" class="no-prefix" id="ppfYears" inputmode="decimal" pattern="[0-9]*"
+                 placeholder="e.g. 15" min="15" max="50" oninput="markStale('ppfResult','ppfStale')">
+          <span class="input-suffix">years</span>
         </div>
+        <div class="field-hint">Minimum lock-in: 15 years (extendable in 5-year blocks)</div>
+        <div class="field-error" id="ppfYearsErr">PPF minimum duration is 15 years</div>
       </div>
-      <div class="error-msg" id="ppfError">Please fill all fields with valid values.</div>
+
+      <div class="field">
+        <label for="ppfTaxBracket">Your Income Tax Bracket</label>
+        <div class="input-wrap">
+          <input type="number" class="no-prefix" id="ppfTaxBracket" inputmode="decimal" pattern="[0-9]*"
+                 placeholder="e.g. 30" min="0" max="42" value="30" oninput="markStale('ppfResult','ppfStale')">
+          <span class="input-suffix">%</span>
+        </div>
+        <div class="field-hint">Used to calculate your annual 80C tax saving. Common slabs: 5%, 20%, 30%.</div>
+      </div>
+
       <button class="btn" onclick="calculatePPF()">Calculate Returns →</button>
 
       <div class="result-box gold" id="ppfResult">
+        <div class="stale-overlay" id="ppfStale">↻ Inputs changed — please recalculate</div>
+
         <div class="result-grid">
           <div class="result-item">
             <div class="result-label">Maturity Value</div>
@@ -463,83 +876,33 @@
           <div class="bar-label-row"><span>Invested</span><span>Interest</span></div>
           <div class="bar-track"><div class="bar-fill" id="ppfBar" style="width:0%"></div></div>
         </div>
-      </div>
-    </div>
-  </div>
 
-  <!-- ── Loan vs Invest ── -->
-  <div class="panel" id="panel-decision">
-    <div class="card">
-      <div class="card-title">Loan vs Invest</div>
-      <div class="card-desc">Should you use surplus money to prepay your loan or invest it? Enter your loan details and expected investment return to compare.</div>
+        <div id="ppfTaxCallout" class="tax-callout">
+          🧾 <span id="ppfTaxText"></span>
+        </div>
 
-      <div class="field">
-        <label for="loanOutstanding">Outstanding Loan Principal</label>
-        <div class="input-wrap">
-          <span class="input-prefix">₹</span>
-          <input type="number" id="loanOutstanding" placeholder="2000000" min="1">
+        <div id="ppfInsightBox" class="insight-box">
+          💡 <span id="ppfInsight"></span>
         </div>
-      </div>
-      <div class="grid-2">
-        <div class="field">
-          <label for="loanRate">Loan Interest Rate</label>
-          <div class="input-wrap">
-            <input type="number" class="no-prefix" id="loanRate" placeholder="8.5" min="1" max="40">
-            <span class="input-suffix">% p.a.</span>
-          </div>
-        </div>
-        <div class="field">
-          <label for="loanTenure">Remaining Tenure</label>
-          <div class="input-wrap">
-            <input type="number" class="no-prefix" id="loanTenure" placeholder="10" min="1" max="30">
-            <span class="input-suffix">years</span>
-          </div>
-        </div>
-      </div>
-      <div class="field">
-        <label for="monthlyExtra">Monthly Surplus Amount</label>
-        <div class="input-wrap">
-          <span class="input-prefix">₹</span>
-          <input type="number" id="monthlyExtra" placeholder="20000" min="1">
-        </div>
-        <div style="font-size:0.75rem;color:var(--muted);margin-top:4px;">Amount you can either prepay or invest every month</div>
-      </div>
-      <div class="field">
-        <label for="investRate">Expected Investment Return</label>
-        <div class="input-wrap">
-          <input type="number" class="no-prefix" id="investRate" placeholder="12" min="1" max="50">
-          <span class="input-suffix">% p.a.</span>
-        </div>
-      </div>
-      <div class="error-msg" id="decisionError">Please fill all fields with valid values.</div>
-      <button class="btn" onclick="compareDecision()">Compare Options →</button>
 
-      <div class="result-box" id="decisionResult">
-        <div class="result-grid">
-          <div class="result-item">
-            <div class="result-label">If you Invest</div>
-            <div class="result-value" id="decInvest">—</div>
-            <div style="font-size:0.78rem;color:var(--muted);margin-top:2px;">Portfolio value after tenure</div>
-          </div>
-          <div class="result-item">
-            <div class="result-label">Interest Saved (Prepay)</div>
-            <div class="result-value" id="decSaved">—</div>
-            <div style="font-size:0.78rem;color:var(--muted);margin-top:2px;">Net interest you'd avoid</div>
-          </div>
-        </div>
-        <hr class="divider">
-        <div class="verdict" id="decVerdict"></div>
+        <!-- CHANGE 2: Correct GitHub Pages link -->
+        <button class="btn-share" onclick="shareResult('ppf')">
+          <span>🔗</span> Share this result
+        </button>
       </div>
     </div>
   </div>
 
 </main>
 
+<div class="share-toast" id="shareToast">✅ Result copied to clipboard!</div>
+
 <script>
-  // ── Helpers ──────────────────────────────────────────────
+  // ── Helpers ──────────────────────────────────────────────────────────────
+
+  const SITE_URL = 'https://harshasai6666-web.github.io/wealthpulse/'; // CHANGE 2
 
   function fmt(n) {
-    // Indian number formatting (lakhs/crores)
     return '₹' + Math.round(n).toLocaleString('en-IN');
   }
 
@@ -547,17 +910,71 @@
     return parseFloat(document.getElementById(id).value);
   }
 
-  function showError(id, show) {
-    document.getElementById(id).style.display = show ? 'block' : 'none';
+  // ── CHANGE 5: Count-up animation for rupee values ────────────────────────
+  // Animates an element from 0 to a target number over ~900ms
+  function countUp(el, targetValue, duration) {
+    duration = duration || 900;
+    const start     = performance.now();
+    const startVal  = 0;
+
+    function step(now) {
+      const elapsed  = now - start;
+      const progress = Math.min(elapsed / duration, 1);
+      // Ease-out cubic
+      const eased    = 1 - Math.pow(1 - progress, 3);
+      const current  = Math.round(startVal + (targetValue - startVal) * eased);
+      el.textContent = '₹' + current.toLocaleString('en-IN');
+      if (progress < 1) {
+        requestAnimationFrame(step);
+      } else {
+        el.textContent = fmt(targetValue); // Snap to exact formatted value at end
+        el.classList.add('value-pop');
+        setTimeout(() => el.classList.remove('value-pop'), 400);
+      }
+    }
+    requestAnimationFrame(step);
   }
 
-  function animateBar(barId, pct) {
-    const bar = document.getElementById(barId);
-    bar.style.width = '0%';
-    setTimeout(() => { bar.style.width = Math.min(100, Math.max(5, pct)) + '%'; }, 50);
+  // Count-up for smaller non-rupee text values (e.g. breakeven %)
+  function countUpPct(el, targetValue, decimals, suffix, duration) {
+    duration = duration || 700;
+    const start = performance.now();
+    function step(now) {
+      const elapsed  = now - start;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased    = 1 - Math.pow(1 - progress, 3);
+      const current  = (targetValue * eased).toFixed(decimals);
+      el.textContent = current + suffix;
+      if (progress < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
   }
 
-  // ── Tab switching ─────────────────────────────────────────
+  // ── Field-level validation ───────────────────────────────────────────────
+
+  function setFieldError(inputId, errId, hasError) {
+    const input = document.getElementById(inputId);
+    const err   = document.getElementById(errId);
+    if (!input || !err) return;
+    input.classList.toggle('input-error', hasError);
+    err.classList.toggle('show', hasError);
+  }
+
+  function clearFieldErrors(pairs) {
+    pairs.forEach(([i, e]) => setFieldError(i, e, false));
+  }
+
+  // ── Stale overlay ────────────────────────────────────────────────────────
+
+  function markStale(resultId, staleId) {
+    const result = document.getElementById(resultId);
+    const stale  = document.getElementById(staleId);
+    if (result && result.classList.contains('show') && stale) {
+      stale.classList.add('show');
+    }
+  }
+
+  // ── Tab switching ────────────────────────────────────────────────────────
 
   function switchTab(name, btn) {
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
@@ -566,184 +983,311 @@
     btn.classList.add('active');
   }
 
-  // ── SIP Calculator ────────────────────────────────────────
+  // ── Bar animation ────────────────────────────────────────────────────────
+
+  function animateBar(barId, pct) {
+    const bar = document.getElementById(barId);
+    bar.style.width = '0%';
+    setTimeout(() => { bar.style.width = Math.min(100, Math.max(5, pct)) + '%'; }, 50);
+  }
+
+  // ── Inflation toggle ─────────────────────────────────────────────────────
+
+  let _lastSipFV    = 0;
+  let _lastSipYears = 0;
+
+  function toggleInflation() {
+    const on  = document.getElementById('inflationToggle').checked;
+    const row = document.getElementById('inflationRow');
+    if (on) {
+      row.classList.add('show');
+      if (_lastSipFV > 0) {
+        const realVal = _lastSipFV / Math.pow(1.06, _lastSipYears);
+        // CHANGE 4: Show motivating message based on how much real value was preserved
+        const pctPreserved = Math.round((realVal / _lastSipFV) * 100);
+        document.getElementById('sipRealValue').textContent = fmt(realVal);
+        const msgEl = document.getElementById('sipInflationMsg');
+        msgEl.textContent = pctPreserved >= 60
+          ? `💡 Even after accounting for inflation, you're preserving ${pctPreserved}% of your corpus's purchasing power. The earlier you start, the more you beat inflation.`
+          : `💡 This shows why starting early matters most — a longer SIP horizon dramatically outpaces inflation. Every additional year of investing compounds your real returns.`;
+      }
+    } else {
+      row.classList.remove('show');
+    }
+  }
+
+  // ── CHANGE 2: Share result with correct GitHub Pages URL ─────────────────
+
+  function shareResult(type) {
+    let text = '';
+
+    if (type === 'sip') {
+      const maturity  = document.getElementById('sipMaturity').textContent;
+      const invested  = document.getElementById('sipInvested').textContent;
+      const gain      = document.getElementById('sipGain').textContent;
+      const P         = getVal('sipAmount');
+      const years     = getVal('sipYears');
+      const stepUp    = getVal('sipStepUp') || 0;
+      const stepNote  = stepUp > 0 ? ` (with ${stepUp}% annual step-up)` : '';
+      text = `💰 My SIP Projection — WealthPulse\n\nMonthly SIP: ${fmt(P)}${stepNote}\nDuration: ${years} years\n\n📈 Maturity Value: ${maturity}\n💵 Total Invested: ${invested}\n🏆 Wealth Gained: ${gain}\n\n✨ Calculate yours free → ${SITE_URL}`;
+    } else if (type === 'ppf') {
+      const maturity = document.getElementById('ppfMaturity').textContent;
+      const invested = document.getElementById('ppfInvested').textContent;
+      const gain     = document.getElementById('ppfGain').textContent;
+      const P        = getVal('ppfAmount');
+      const years    = getVal('ppfYears');
+      text = `🏦 My PPF Projection — WealthPulse\n\nYearly Investment: ${fmt(P)}\nDuration: ${years} years\n\n📈 Maturity Value: ${maturity}\n💵 Total Invested: ${invested}\n🏆 Interest Earned: ${gain}\n\n✅ 100% tax-free (EEE status)\n\n✨ Calculate yours free → ${SITE_URL}`;
+    } else if (type === 'decision') {
+      const invest  = document.getElementById('decInvest').textContent;
+      const saved   = document.getElementById('decSaved').textContent;
+      const time    = document.getElementById('decTimeSaved').textContent;
+      const beven   = document.getElementById('decBreakeven').textContent;
+      text = `⚖️ Loan vs Invest — WealthPulse\n\nIf I invest my surplus: ${invest}\nIf I prepay my loan, I save: ${saved} in interest\n\nBreak-even return needed: ${beven}\nLoan closure advantage: ${time}\n\n✨ Run your own comparison free → ${SITE_URL}`;
+    }
+
+    navigator.clipboard.writeText(text).then(() => {
+      const toast = document.getElementById('shareToast');
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2800);
+    }).catch(() => {
+      prompt('Copy this result:', text);
+    });
+  }
+
+  // ── SIP Calculator ────────────────────────────────────────────────────────
 
   function calculateSIP() {
-    const P = getVal('sipAmount');
+    const P       = getVal('sipAmount');
     const rAnnual = getVal('sipRate');
-    const years = getVal('sipYears');
+    const years   = getVal('sipYears');
+    const stepUp  = getVal('sipStepUp') || 0;
 
-    if (!P || !rAnnual || !years || P <= 0 || rAnnual <= 0 || years <= 0) {
-      showError('sipError', true);
-      return;
-    }
-    showError('sipError', false);
+    let hasError = false;
+    clearFieldErrors([
+      ['sipAmount', 'sipAmountErr'],
+      ['sipRate',   'sipRateErr'],
+      ['sipYears',  'sipYearsErr'],
+    ]);
 
-    const r = rAnnual / 100 / 12;
+    if (!P || P < 100)                         { setFieldError('sipAmount', 'sipAmountErr', true); hasError = true; }
+    if (!rAnnual || rAnnual <= 0 || rAnnual > 50) { setFieldError('sipRate',   'sipRateErr',   true); hasError = true; }
+    if (!years || years <= 0 || years > 50)       { setFieldError('sipYears',  'sipYearsErr',  true); hasError = true; }
+    if (hasError) return;
+
     const n = years * 12;
-    const invested = P * n;
+    let FV = 0;
+    let invested = 0;
 
-    let FV;
-    if (r === 0) {
-      FV = invested; // edge case: 0% return
+    if (stepUp > 0) {
+      let monthly = P;
+      const factor = 1 + stepUp / 100;
+      const r = rAnnual / 100 / 12;
+      for (let year = 0; year < years; year++) {
+        for (let m = 0; m < 12; m++) { FV = (FV + monthly) * (1 + r); }
+        invested += monthly * 12;
+        monthly  *= factor;
+      }
     } else {
-      FV = P * (((Math.pow(1 + r, n) - 1) / r) * (1 + r));
+      const r = rAnnual / 100 / 12;
+      FV       = r === 0 ? P * n : P * (((Math.pow(1 + r, n) - 1) / r) * (1 + r));
+      invested = P * n;
     }
 
-    const gain = FV - invested;
+    const gain        = FV - invested;
     const investedPct = (invested / FV) * 100;
 
-    document.getElementById('sipMaturity').textContent = fmt(FV);
-    document.getElementById('sipGain').textContent = fmt(gain);
+    // CHANGE 5: Count-up animations
+    countUp(document.getElementById('sipMaturity'), FV);
+    countUp(document.getElementById('sipGain'),     gain, 800);
     document.getElementById('sipInvested').textContent = fmt(invested);
     animateBar('sipBar', investedPct);
 
-// 🔥 Insight logic
-let insight = "";
-let insightClass = "";
+    _lastSipFV    = FV;
+    _lastSipYears = years;
 
-if (years >= 15 && rAnnual >= 12) {
-  insight = "You're on track to build serious long-term wealth. Consistency will be your biggest advantage.";
-  insightClass = "green";
-} else if (years < 5) {
-  insight = "This is a short horizon. Wealth creation improves significantly with longer duration.";
-  insightClass = "red";
-} else if (rAnnual < 10) {
-  insight = "Your expected return is conservative. Higher-return assets could accelerate wealth creation (with risk).";
-  insightClass = "gold";
-} else {
-  insight = "Good balance of time and returns. Stay invested and avoid interruptions.";
-  insightClass = "gold";
-}
+    // Refresh inflation if toggle is on
+    if (document.getElementById('inflationToggle').checked) {
+      const realVal = FV / Math.pow(1.06, years);
+      document.getElementById('sipRealValue').textContent = fmt(realVal);
+    }
 
-// ✅ Update insight text
-document.getElementById("sipInsight").textContent = insight;
+    // Insight
+    let insight = '', insightClass = '';
+    if (years >= 15 && rAnnual >= 12) {
+      insight = "You're on track to build serious long-term wealth. Consistency will be your biggest advantage.";
+      insightClass = 'green';
+    } else if (years < 5) {
+      insight = 'Short horizon. Wealth creation improves significantly over longer durations — consider extending your SIP.';
+      insightClass = 'red';
+    } else if (rAnnual < 10) {
+      insight = 'Your expected return is conservative. Higher-return assets could accelerate wealth creation, though with higher risk.';
+      insightClass = 'gold';
+    } else {
+      insight = "Good balance of time and returns. Stay invested and avoid interruptions — that's where most wealth is lost.";
+      insightClass = 'gold';
+    }
 
-// ✅ SAFE handling (prevents crash)
-const insightBox = document.getElementById('sipInsightBox');
+    const insightBox = document.getElementById('sipInsightBox');
+    document.getElementById('sipInsight').textContent = insight;
+    insightBox.classList.remove('green', 'gold', 'red', 'show');
+    setTimeout(() => insightBox.classList.add(insightClass, 'show'), 350);
 
-if (insightBox) {
-  insightBox.classList.remove('green', 'gold', 'red');
-  insightBox.classList.add(insightClass);
-
-  insightBox.classList.remove('show');
-  setTimeout(() => {
-    insightBox.classList.add('show');
-  }, 300);
-}
-
-// ✅ Show result box
-const box = document.getElementById('sipResult');
-box.classList.add('show');
+    document.getElementById('sipStale').classList.remove('show');
+    document.getElementById('sipResult').classList.add('show');
   }
 
-  // ── PPF Calculator ────────────────────────────────────────
+  // ── PPF Calculator ────────────────────────────────────────────────────────
 
   function calculatePPF() {
-    const P = getVal('ppfAmount');
-    const years = getVal('ppfYears');
-    const rInput = getVal('ppfRate');
-    const r = rInput / 100;
+    const P          = getVal('ppfAmount');
+    const years      = getVal('ppfYears');
+    const rInput     = getVal('ppfRate');
+    const taxBracket = getVal('ppfTaxBracket') || 0;
+    const r          = rInput / 100;
 
-    if (!P || !years || !rInput || P <= 0 || years < 15 || P > 150000 || rInput <= 0) {
-      showError('ppfError', true);
-      return;
-    }
-    showError('ppfError', false);
+    let hasError = false;
+    clearFieldErrors([
+      ['ppfAmount', 'ppfAmountErr'],
+      ['ppfRate',   'ppfRateErr'],
+      ['ppfYears',  'ppfYearsErr'],
+    ]);
+
+    if (!P || P < 500 || P > 150000) { setFieldError('ppfAmount', 'ppfAmountErr', true); hasError = true; }
+    if (!rInput || rInput <= 0)       { setFieldError('ppfRate',   'ppfRateErr',   true); hasError = true; }
+    if (!years || years < 15)         { setFieldError('ppfYears',  'ppfYearsErr',  true); hasError = true; }
+    if (hasError) return;
 
     let total = 0;
-    for (let i = 0; i < years; i++) {
-      total = (total + P) * (1 + r);
-    }
+    for (let i = 0; i < years; i++) { total = (total + P) * (1 + r); }
 
-    const invested = P * years;
-    const gain = total - invested;
+    const invested    = P * years;
+    const gain        = total - invested;
     const investedPct = (invested / total) * 100;
 
-    document.getElementById('ppfMaturity').textContent = fmt(total);
-    document.getElementById('ppfGain').textContent = fmt(gain);
+    // CHANGE 5: Count-up animations
+    countUp(document.getElementById('ppfMaturity'), total);
+    countUp(document.getElementById('ppfGain'),     gain, 800);
     document.getElementById('ppfInvested').textContent = fmt(invested);
     animateBar('ppfBar', investedPct);
 
+    // Tax callout
+    const taxCallout = document.getElementById('ppfTaxCallout');
+    const taxText    = document.getElementById('ppfTaxText');
+    if (taxBracket > 0 && P > 0) {
+      const annualTaxSaving = Math.min(P, 150000) * (taxBracket / 100);
+      const totalTaxSaving  = annualTaxSaving * years;
+      taxText.textContent   =
+        `At ${taxBracket}% tax bracket, your ₹${Math.min(P, 150000).toLocaleString('en-IN')} annual PPF investment ` +
+        `saves you ${fmt(annualTaxSaving)} in taxes every year under Section 80C — ` +
+        `that's ${fmt(totalTaxSaving)} in total tax saved over ${years} years. ` +
+        `PPF also qualifies for EEE status: contributions, interest, and maturity are all tax-free.`;
+      taxCallout.classList.remove('show');
+      setTimeout(() => taxCallout.classList.add('show'), 200);
+    } else {
+      taxCallout.classList.remove('show');
+    }
+
+    // PPF insight
+    const ppfInsightBox = document.getElementById('ppfInsightBox');
+    const ppfInsight    = document.getElementById('ppfInsight');
+    let insight = '', insightClass = '';
+    if (years >= 25) {
+      insight = 'Excellent long-term commitment. Extended PPF (beyond 15 years in 5-year blocks) maximises your tax-free compounding significantly.';
+      insightClass = 'green';
+    } else if (years === 15) {
+      insight = "You're at the minimum lock-in. Consider extending in 5-year blocks — the compounding effect accelerates meaningfully in years 16–25.";
+      insightClass = 'gold';
+    } else {
+      insight = 'PPF is best used as a guaranteed, risk-free debt component in your portfolio. Pair it with equity SIPs for balanced long-term growth.';
+      insightClass = 'gold';
+    }
+    ppfInsight.textContent = insight;
+    ppfInsightBox.classList.remove('green', 'gold', 'red', 'show');
+    setTimeout(() => ppfInsightBox.classList.add(insightClass, 'show'), 350);
+
+    document.getElementById('ppfStale').classList.remove('show');
     document.getElementById('ppfResult').classList.add('show');
   }
 
-  // ── Loan vs Invest ────────────────────────────────────────
-  // Correct approach:
-  // PREPAY path: calculate total interest that WOULD be paid on remaining loan,
-  //   then compute how much of that is saved by prepaying monthly surplus.
-  // INVEST path: compound the monthly surplus as a SIP.
+  // ── Loan vs Invest ────────────────────────────────────────────────────────
 
   function compareDecision() {
-    const principal    = getVal('loanOutstanding');
-    const loanRateAnn  = getVal('loanRate');
-    const tenureYears  = getVal('loanTenure');
-    const monthly      = getVal('monthlyExtra');
+    const principal     = getVal('loanOutstanding');
+    const loanRateAnn   = getVal('loanRate');
+    const tenureYears   = getVal('loanTenure');
+    const monthly       = getVal('monthlyExtra');
     const investRateAnn = getVal('investRate');
 
-    if (!principal || !loanRateAnn || !tenureYears || !monthly || !investRateAnn
-        || [principal, loanRateAnn, tenureYears, monthly, investRateAnn].some(v => v <= 0)) {
-      showError('decisionError', true);
-      return;
-    }
-    showError('decisionError', false);
+    let hasError = false;
+    clearFieldErrors([
+      ['loanOutstanding', 'decPrincipalErr'],
+      ['loanRate',        'decLoanRateErr'],
+      ['loanTenure',      'decTenureErr'],
+      ['monthlyExtra',    'decSurplusErr'],
+      ['investRate',      'decInvestRateErr'],
+    ]);
+
+    if (!principal || principal <= 0)                          { setFieldError('loanOutstanding', 'decPrincipalErr', true);  hasError = true; }
+    if (!loanRateAnn || loanRateAnn <= 0 || loanRateAnn > 40) { setFieldError('loanRate',        'decLoanRateErr', true);   hasError = true; }
+    if (!tenureYears || tenureYears <= 0 || tenureYears > 30) { setFieldError('loanTenure',      'decTenureErr',   true);   hasError = true; }
+    if (!monthly || monthly <= 0)                              { setFieldError('monthlyExtra',    'decSurplusErr',  true);   hasError = true; }
+    if (!investRateAnn || investRateAnn <= 0)                  { setFieldError('investRate',      'decInvestRateErr', true); hasError = true; }
+    if (hasError) return;
 
     const rm = loanRateAnn / 100 / 12;
     const n  = tenureYears * 12;
 
-    // EMI for original loan
-    const emi = principal * rm * Math.pow(1 + rm, n) / (Math.pow(1 + rm, n) - 1);
-    const totalPaidOriginal = emi * n;
-    const totalInterestOriginal = totalPaidOriginal - principal;
+    const emi                   = principal * rm * Math.pow(1 + rm, n) / (Math.pow(1 + rm, n) - 1);
+    const totalInterestOriginal = emi * n - principal;
 
-    // Prepay path: EMI + surplus each month → loan clears early → interest saved
-    let balance = principal;
-    let monthsPaid = 0;
-    let totalPaidPrepay = 0;
-    while (balance > 0 && monthsPaid < n) {
-      const interest = balance * rm;
-      const principalPart = emi - interest;
-      const extraPrincipal = Math.min(monthly, balance - principalPart);
-      balance -= (principalPart + Math.max(0, extraPrincipal));
-      totalPaidPrepay += emi + Math.max(0, monthly - Math.max(0, extraPrincipal < 0 ? 0 : extraPrincipal));
-      // simpler: just track interest paid
-      monthsPaid++;
-      if (balance <= 0) break;
-    }
-    // Simpler & correct: recompute interest saved
-    let bal2 = principal;
-    let interestPaidWithPrepay = 0;
+    let bal2 = principal, interestPaidWithPrepay = 0;
     for (let m = 0; m < n; m++) {
       if (bal2 <= 0) break;
       const intCharge = bal2 * rm;
       interestPaidWithPrepay += intCharge;
-      const prinPart = Math.min(bal2, emi - intCharge + monthly);
-      bal2 -= prinPart;
+      bal2 -= Math.min(bal2, emi - intCharge + monthly);
     }
     const interestSaved = totalInterestOriginal - interestPaidWithPrepay;
 
-    // Invest path: SIP of monthly surplus
-    const ri = investRateAnn / 100 / 12;
+    const ri       = investRateAnn / 100 / 12;
     const investFV = ri === 0
       ? monthly * n
       : monthly * (((Math.pow(1 + ri, n) - 1) / ri) * (1 + ri));
 
-    document.getElementById('decInvest').textContent = fmt(investFV);
-    document.getElementById('decSaved').textContent  = fmt(Math.max(0, interestSaved));
+    let monthsWithPrepay = 0, balTemp = principal;
+    for (let m = 0; m < n; m++) {
+      if (balTemp <= 0) break;
+      const intCharge = balTemp * rm;
+      balTemp -= Math.min(balTemp, emi - intCharge + monthly);
+      monthsWithPrepay++;
+    }
+    const yearsSaved = (n - monthsWithPrepay) / 12;
 
-    const box = document.getElementById('decisionResult');
+    // CHANGE 5: Count-up on invest and saved values
+    countUp(document.getElementById('decInvest'), investFV);
+    countUp(document.getElementById('decSaved'),  Math.max(0, interestSaved), 800);
+    countUpPct(document.getElementById('decBreakeven'), loanRateAnn, 2, '%', 700);
+    document.getElementById('decTimeSaved').textContent = yearsSaved > 0.08
+      ? yearsSaved.toFixed(1) + ' years earlier'
+      : 'No significant difference';
+
+    const box     = document.getElementById('decisionResult');
     const verdict = document.getElementById('decVerdict');
 
+    // CHANGE 3: Verdict with coloured pill background styling
     if (investFV > interestSaved) {
       box.className = 'result-box show green';
+      verdict.className = 'verdict verdict-invest';
       verdict.innerHTML = `<span class="verdict-icon">📈</span>
-        <span>Investing looks better — your portfolio could grow to <strong>${fmt(investFV)}</strong> vs saving 
-        <strong>${fmt(Math.max(0, interestSaved))}</strong> in interest. But consider your risk tolerance and loan type (home loan interest may be tax-deductible).</span>`;
+        <span>Investing looks better — your portfolio could grow to <strong>${fmt(investFV)}</strong>, compared to saving <strong>${fmt(Math.max(0, interestSaved))}</strong> in interest by prepaying. Note: home loan interest may be partially tax-deductible under Section 24B.</span>`;
     } else {
       box.className = 'result-box show rose';
+      verdict.className = 'verdict verdict-prepay';
       verdict.innerHTML = `<span class="verdict-icon">🏦</span>
-        <span>Prepaying your loan looks better — you'd save <strong>${fmt(Math.max(0, interestSaved))}</strong> in interest, a guaranteed return equal to your loan rate. Investing may not beat this after taxes and risk.</span>`;
+        <span>Prepaying your loan looks better — you'd save <strong>${fmt(Math.max(0, interestSaved))}</strong> in interest, a guaranteed, risk-free return equal to your loan rate. Investing may not beat this after taxes and market volatility.</span>`;
     }
+
+    document.getElementById('decStale').classList.remove('show');
   }
 </script>
 </body>
